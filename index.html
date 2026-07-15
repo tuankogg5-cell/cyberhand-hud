@@ -3,112 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gửi Thuỳ 💫</title>
-    <meta name="description" content="Trang web lưu giữ kỷ niệm đẹp gửi tặng Thuỳ với lời chúc hạnh phúc chân thành nhất.">
-    <!-- Google Fonts for typography -->
+    <title>CyberHand HUD - Nhận Diện Cử Chỉ Tay Tương Tác</title>
+    <meta name="description" content="Trải nghiệm công nghệ Hand Tracking thời gian thực với các chế độ vẽ tranh neon, chơi nhạc cụ và trò chơi tương tác.">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
-    <!-- Custom Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- MediaPipe CDN Links -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Background Canvas for Floating Heart Particles -->
-    <canvas id="heartCanvas"></canvas>
+    <!-- Background Grid Effect -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
 
-    <!-- 1. Lock Screen (Gates of Love) -->
-    <div id="lockScreen" class="overlay-screen">
-        <div class="lock-container">
-            <div class="envelope-wrapper">
-                <div class="envelope" id="envelopeBtn">
-                    <div class="flap"></div>
-                    <div class="pocket"></div>
-                    <div class="letter-preview">❤️</div>
-                    <div class="heart-seal"></div>
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar glass-panel">
+            <div class="brand">
+                <span class="pulse-dot"></span>
+                <h1>CYBERHAND HUD</h1>
+            </div>
+            
+            <!-- Performance Stats -->
+            <div class="stats-panel glass-panel-inner">
+                <div class="stat-item">
+                    <span class="stat-label">FPS</span>
+                    <span id="fps-val" class="stat-val text-green">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Bàn Tay</span>
+                    <span id="hands-val" class="stat-val text-blue">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Cử Chỉ</span>
+                    <span id="gesture-val" class="stat-val text-pink">Trống</span>
                 </div>
             </div>
-            <h1 class="lock-title">Gửi Thuỳ... 🌟</h1>
-            <p class="lock-hint">Chạm vào bức thư để mở điều bí mật</p>
+
+            <!-- Mode Selector -->
+            <div class="section-title">Chế độ hoạt động</div>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="visualizer">
+                    <span class="btn-icon">👁️</span>
+                    <div class="btn-text">
+                        <strong>Bản Đồ Xương Tay</strong>
+                        <span>Xem khung xương neon</span>
+                    </div>
+                </button>
+                <button class="mode-btn" data-mode="drawing">
+                    <span class="btn-icon">🎨</span>
+                    <div class="btn-text">
+                        <strong>Vẽ Neon Bằng Ngón Tay</strong>
+                        <span>Pinch để vẽ tự do</span>
+                    </div>
+                </button>
+                <button class="mode-btn" data-mode="synth">
+                    <span class="btn-icon">🎹</span>
+                    <div class="btn-text">
+                        <strong>Nhạc Cụ Không Chạm</strong>
+                        <span>Chạm nốt nhạc ảo</span>
+                    </div>
+                </button>
+                <button class="mode-btn" data-mode="bubble">
+                    <span class="btn-icon">🫧</span>
+                    <div class="btn-text">
+                        <strong>Đập Bong Bóng</strong>
+                        <span>Chạm nổ bóng tính điểm</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Contextual Settings Panels -->
+            <div class="section-title">Cấu hình & Tùy chọn</div>
+            
+            <!-- Global / Video Settings -->
+            <div class="settings-group">
+                <div class="control-row">
+                    <label for="camera-select">Thiết bị camera</label>
+                    <select id="camera-select" class="custom-select">
+                        <option value="">Đang tải danh sách...</option>
+                    </select>
+                </div>
+                <div class="control-row-flex">
+                    <button id="toggle-camera-btn" class="action-btn text-green">Bật/Tắt Camera</button>
+                    <button id="toggle-mirror-btn" class="action-btn">Lật Gương</button>
+                </div>
+            </div>
+
+            <!-- Mode Specific Controls (Dynamic Visibility) -->
+            <!-- Drawing Settings -->
+            <div id="settings-drawing" class="settings-group hidden">
+                <div class="control-row">
+                    <label>Màu vẽ Neon</label>
+                    <div class="color-picker-grid">
+                        <button class="color-btn active" data-color="#ff007f" style="--color-theme: #ff007f;"></button>
+                        <button class="color-btn" data-color="#00f3ff" style="--color-theme: #00f3ff;"></button>
+                        <button class="color-btn" data-color="#39ff14" style="--color-theme: #39ff14;"></button>
+                        <button class="color-btn" data-color="#ff00f0" style="--color-theme: #ff00f0;"></button>
+                        <button class="color-btn" data-color="#ffaa00" style="--color-theme: #ffaa00;"></button>
+                        <button class="color-btn" data-color="#ffffff" style="--color-theme: #ffffff;"></button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label for="brush-size">Kích thước cọ: <span id="brush-size-val">8px</span></label>
+                    <input type="range" id="brush-size" min="2" max="30" value="8" class="custom-slider">
+                </div>
+                <button id="clear-canvas-btn" class="action-btn btn-danger">Xóa Bản Vẽ (Hoặc Nắm tay)</button>
+            </div>
+
+            <!-- Synth Settings -->
+            <div id="settings-synth" class="settings-group hidden">
+                <div class="control-row">
+                    <label for="synth-waveform">Kiểu sóng âm</label>
+                    <select id="synth-waveform" class="custom-select">
+                        <option value="sine">Sóng hình sin (Mượt)</option>
+                        <option value="triangle">Sóng hình tam giác (Ấm)</option>
+                        <option value="sawtooth">Sóng hình răng cưa (Sắc)</option>
+                        <option value="square">Sóng hình vuông (Cổ điển)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bubble Game Settings -->
+            <div id="settings-bubble" class="settings-group hidden">
+                <div class="game-score-display">
+                    <div class="game-stat">
+                        <span>Điểm số</span>
+                        <strong id="game-score">0</strong>
+                    </div>
+                    <div class="game-stat">
+                        <span>Thời gian</span>
+                        <strong id="game-timer">60s</strong>
+                    </div>
+                </div>
+                <button id="start-game-btn" class="action-btn btn-success">Bắt đầu trò chơi</button>
+            </div>
+
+            <!-- Footer info -->
+            <div class="sidebar-footer">
+                <p>CyberHand HUD v1.0.0</p>
+                <p>Sử dụng MediaPipe Hands API</p>
+            </div>
+        </aside>
+
+        <!-- Main Viewport Area -->
+        <main class="viewport glass-panel">
+            <!-- Game/Mode HUD Overlays -->
+            <div id="game-hud-overlay" class="game-hud hidden">
+                <div class="hud-item combo-box">
+                    <span>COMBO</span>
+                    <strong id="game-combo">x1</strong>
+                </div>
+                <div class="hud-item target-box">
+                    <span>MỤC TIÊU</span>
+                    <strong>1000</strong>
+                </div>
+            </div>
+
+            <div id="gesture-toast" class="gesture-toast">
+                <span id="toast-icon">✨</span>
+                <span id="toast-text">Hệ thống sẵn sàng</span>
+            </div>
+
+            <!-- Interactive Canvas Container -->
+            <div class="canvas-wrapper">
+                <video id="webcam" autoplay playsinline muted></video>
+                <canvas id="output-canvas"></canvas>
+                
+                <!-- Center loading/info -->
+                <div id="camera-loading" class="loading-overlay">
+                    <div class="spinner"></div>
+                    <p>Đang chuẩn bị Camera & Mô hình nhận diện...</p>
+                    <span>Vui lòng cấp quyền truy cập camera nếu có thông báo</span>
+                </div>
+
+                <div id="game-over-overlay" class="loading-overlay hidden">
+                    <h2 class="game-over-title">HẾT GIỜ!</h2>
+                    <p class="game-over-score">Điểm số của bạn: <span id="final-score">0</span></p>
+                    <button id="restart-game-btn" class="action-btn btn-success">Chơi Lại</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- User Onboarding Modal -->
+    <div id="onboarding-modal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>CHÀO MỪNG ĐẾN VỚI CYBERHAND HUD</h2>
+            </div>
+            <div class="modal-body">
+                <p>Trải nghiệm tương tác không chạm bằng Camera tiên tiến. Dưới đây là các cử chỉ được hỗ trợ:</p>
+                
+                <div class="gestures-guide">
+                    <div class="guide-item">
+                        <span class="guide-icon">🖐️</span>
+                        <div class="guide-desc">
+                            <strong>Bàn tay mở (Open Hand)</strong>
+                            <span>Trạng thái chờ hoặc di chuyển tự do.</span>
+                        </div>
+                    </div>
+                    <div class="guide-item">
+                        <span class="guide-icon">🤏</span>
+                        <div class="guide-desc">
+                            <strong>Chụm tay (Pinch)</strong>
+                            <span>Chụm ngón cái và ngón trỏ để vẽ tranh neon trong chế độ vẽ.</span>
+                        </div>
+                    </div>
+                    <div class="guide-item">
+                        <span class="guide-icon">✊</span>
+                        <div class="guide-desc">
+                            <strong>Nắm tay (Fist)</strong>
+                            <span>Nắm tay trong 2 giây để xóa nhanh toàn bộ bảng vẽ.</span>
+                        </div>
+                    </div>
+                    <div class="guide-item">
+                        <span class="guide-icon">☝️</span>
+                        <div class="guide-desc">
+                            <strong>Chỉ tay (Pointing)</strong>
+                            <span>Dùng ngón trỏ để chạm và tương tác với phím nhạc hoặc bong bóng.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-notice">
+                    ⚠️ <strong>Lưu ý:</strong> Hãy đảm bảo khu vực xung quanh bạn đủ ánh sáng để camera nhận diện chính xác nhất.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-onboarding-btn" class="action-btn btn-success">TRẢI NGHIỆM NGAY</button>
+            </div>
         </div>
     </div>
 
-    <!-- 2. Main Content Container (Hidden initially) -->
-    <div id="mainContainer" class="main-container hidden">
-        <!-- Floating Header -->
-        <header class="main-header">
-            <div class="logo">To: Thuỳ 💫</div>
-        </header>
-
-        <!-- Main Glass Card -->
-        <main class="love-card glass-panel">
-            <div class="card-glow"></div>
-            
-            <section class="letter-section">
-                <h2 class="letter-heading">Gửi Thuỳ,</h2>
-                <div class="letter-body">
-                    <p class="typewriter-text" id="paragraph1">Cảm ơn em đã xuất hiện và cùng anh đi qua một đoạn đường đầy ý nghĩa. Được gặp em và cùng em chia sẻ những năm tháng ấy là điều anh luôn trân trọng.</p>
-                    <p class="typewriter-text" id="paragraph2">Dù hành trình của chúng ta phải dừng lại tại đây, anh vẫn luôn mong những điều tốt đẹp nhất sẽ đến với em. Mong em luôn bình yên, rạng rỡ và tìm thấy hạnh phúc trọn vẹn ở tương lai phía trước.</p>
-                    <p class="typewriter-text" id="paragraph3">Cảm ơn vì đã từng yêu nhau, cảm ơn vì tất cả những kỷ niệm đẹp đẽ mà chúng ta đã từng trao nhau. Chúc em một đời an yên và hạnh phúc.</p>
-                    <p class="love-declaration">Tạm biệt em! 💫</p>
-                </div>
-            </section>
-
-            <!-- Interactive Love Cards Stack -->
-            <section class="interactive-deck">
-                <h3 class="section-title">Nhấn để lật mở từng thông điệp 🌟</h3>
-                <div class="cards-wrapper">
-                    <!-- Card 1 -->
-                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
-                        <div class="flip-card-inner">
-                            <div class="flip-card-front">
-                                <span class="card-icon">🍃</span>
-                                <h4>Kỷ niệm chúng ta</h4>
-                            </div>
-                            <div class="flip-card-back">
-                                <p>Những nụ cười, những buổi hẹn hò và từng con đường chúng ta từng qua sẽ luôn là một phần ký ức thật đẹp trong lòng anh.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 2 -->
-                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
-                        <div class="flip-card-inner">
-                            <div class="flip-card-front">
-                                <span class="card-icon">🕊️</span>
-                                <h4>Lời chúc của anh</h4>
-                            </div>
-                            <div class="flip-card-back">
-                                <p>Chúc em luôn mạnh khỏe, bình yên trong tâm hồn và gặt hái được thật nhiều thành công trên con đường em chọn phía trước.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 3 -->
-                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
-                        <div class="flip-card-inner">
-                            <div class="flip-card-front">
-                                <span class="card-icon">💫</span>
-                                <h4>Lời gửi gắm</h4>
-                            </div>
-                            <div class="flip-card-back">
-                                <p>Hãy luôn tự tin, yêu thương và chăm sóc bản thân thật tốt em nhé. Cảm ơn em vì tất cả và chúc em luôn hạnh phúc.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="main-footer">
-            <p>Trân trọng từng ký ức đẹp 💫</p>
-        </footer>
-    </div>
-
-    <!-- Custom Cursor Sparkles -->
-    <div id="sparkleContainer"></div>
-
-    <!-- Scripts -->
+    <!-- Custom Script -->
     <script src="script.js"></script>
 </body>
 </html>
