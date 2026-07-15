@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gửi Thuỳ 💖</title>
+    <meta name="description" content="Trang web đặc biệt gửi tặng Thuỳ với những lời chúc và tình cảm chân thành nhất.">
+    <!-- Google Fonts for typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Canvas for Floating Heart Particles -->
+    <canvas id="heartCanvas"></canvas>
+
+    <!-- 1. Lock Screen (Gates of Love) -->
+    <div id="lockScreen" class="overlay-screen">
+        <div class="lock-container">
+            <div class="envelope-wrapper">
+                <div class="envelope" id="envelopeBtn">
+                    <div class="flap"></div>
+                    <div class="pocket"></div>
+                    <div class="letter-preview">❤️</div>
+                    <div class="heart-seal"></div>
+                </div>
+            </div>
+            <h1 class="lock-title">Gửi Thuỳ... ✨</h1>
+            <p class="lock-hint">Chạm vào bức thư để mở điều bí mật</p>
+        </div>
+    </div>
+
+    <!-- 2. Main Content Container (Hidden initially) -->
+    <div id="mainContainer" class="main-container hidden">
+        <!-- Floating Header -->
+        <header class="main-header">
+            <div class="logo">To: Thuỳ 💖</div>
+        </header>
+
+        <!-- Main Glass Card -->
+        <main class="love-card glass-panel">
+            <div class="card-glow"></div>
+            
+            <section class="letter-section">
+                <h2 class="letter-heading">Gửi Thuỳ thân yêu,</h2>
+                <div class="letter-body">
+                    <p class="typewriter-text" id="paragraph1">Gặp được em là điều tuyệt vời nhất trong cuộc đời anh. Cảm ơn em đã xuất hiện và mang theo những khoảnh khắc ngọt ngào nhất.</p>
+                    <p class="typewriter-text" id="paragraph2">Anh muốn gửi trọn trái tim này đến em, mong cô gái của anh luôn hạnh phúc, ngập tràn niềm vui và luôn giữ nụ cười rạng rỡ trên môi.</p>
+                    <p class="typewriter-text" id="paragraph3">Từng giây phút trôi qua, anh càng trân trọng hơn tình cảm của hai ta. Dù mai sau có thế nào, anh vẫn muốn bên cạnh, chở che và đồng hành cùng em.</p>
+                    <p class="love-declaration">Anh yêu em! ❤️</p>
+                </div>
+            </section>
+
+            <!-- Interactive Love Cards Stack -->
+            <section class="interactive-deck">
+                <h3 class="section-title">Nhấn để lật mở từng thông điệp ✨</h3>
+                <div class="cards-wrapper">
+                    <!-- Card 1 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <span class="card-icon">🌸</span>
+                                <h4>Điều anh thích ở em</h4>
+                            </div>
+                            <div class="flip-card-back">
+                                <p>Là nụ cười toả nắng của em, là ánh mắt hiền dịu mỗi khi nhìn anh, và cả cách em giận dỗi cực kỳ đáng yêu nữa.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <span class="card-icon">🤝</span>
+                                <h4>Lời hứa của anh</h4>
+                            </div>
+                            <div class="flip-card-back">
+                                <p>Anh hứa sẽ luôn lắng nghe em, chia sẻ cùng em mọi niềm vui nỗi buồn, và luôn là chỗ dựa vững chắc cho em.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <span class="card-icon">🌟</span>
+                                <h4>Mong ước của anh</h4>
+                            </div>
+                            <div class="flip-card-back">
+                                <p>Mong rằng chúng ta sẽ cùng nhau đi qua thật nhiều nơi, vẽ nên thật nhiều kỷ niệm đẹp đẽ và có một tương lai hạnh phúc trọn vẹn.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>Được tạo ra với tất cả tình yêu thương ❤️</p>
+        </footer>
+    </div>
+
+    <!-- Custom Cursor Sparkles -->
+    <div id="sparkleContainer"></div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
