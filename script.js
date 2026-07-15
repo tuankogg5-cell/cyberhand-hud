@@ -425,60 +425,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Rule-Based Gesture Detection ---
     function detectHandGesture(landmarks) {
-        // Distances from Wrist (0) to fingertip vs joint bases to check extension
-        const wrist = landmarks[0];
+        // Finger TIP, PIP and MCP joints indices for local distance measurements
+        // Index: 8 (Tip), 6 (PIP), 5 (MCP)
+        // Middle: 12 (Tip), 10 (PIP), 9 (MCP)
+        // Ring: 16 (Tip), 14 (PIP), 13 (MCP)
+        // Pinky: 20 (Tip), 18 (PIP), 17 (MCP)
+        // Thumb: 4 (Tip), 3 (IP), 2 (MCP)
         
-        // Finger TIP and PIP joints indices
-        const indexTip = landmarks[8], indexPip = landmarks[6];
-        const middleTip = landmarks[12], middlePip = landmarks[10];
-        const ringTip = landmarks[16], ringPip = landmarks[14];
-        const pinkyTip = landmarks[20], pinkyPip = landmarks[18];
-        const thumbTip = landmarks[4], thumbIp = landmarks[3], thumbMcp = landmarks[2];
+        // Calculate finger extension status using distance relative to finger bases (MCP)
+        // A finger is extended if the tip is far from the base compared to the PIP joint.
+        const f1 = getDistance(landmarks[8], landmarks[5]) > getDistance(landmarks[6], landmarks[5]) * 1.3; // Index
+        const f2 = getDistance(landmarks[12], landmarks[9]) > getDistance(landmarks[10], landmarks[9]) * 1.3; // Middle
+        const f3 = getDistance(landmarks[16], landmarks[13]) > getDistance(landmarks[14], landmarks[13]) * 1.3; // Ring
+        const f4 = getDistance(landmarks[20], landmarks[17]) > getDistance(landmarks[18], landmarks[17]) * 1.3; // Pinky
 
-        // Check if extended by comparing distance to wrist
-        const isIndexExtended = getDistance(indexTip, wrist) > getDistance(indexPip, wrist) * 1.05;
-        const isMiddleExtended = getDistance(middleTip, wrist) > getDistance(middlePip, wrist) * 1.05;
-        const isRingExtended = getDistance(ringTip, wrist) > getDistance(ringPip, wrist) * 1.05;
-        const isPinkyExtended = getDistance(pinkyTip, wrist) > getDistance(pinkyPip, wrist) * 1.05;
+        // For Thumb: extended if it's far from the index MCP (5) and pinky MCP (17)
+        const f0 = getDistance(landmarks[4], landmarks[5]) > getDistance(landmarks[3], landmarks[5]) * 1.1 && 
+                   getDistance(landmarks[4], landmarks[17]) > getDistance(landmarks[2], landmarks[17]) * 1.1;
+
+        // Gestures classification (Ordering is important to prevent overlaps)
         
-        // Thumb logic is sideways, so check distance from thumb tip to index MCP (5)
-        const isThumbExtended = getDistance(thumbTip, wrist) > getDistance(thumbMcp, wrist) * 1.15;
-
-        // Gestures classification
         // 1. FIST (All folded)
-        if (!isIndexExtended && !isMiddleExtended && !isRingExtended && !isPinkyExtended) {
+        if (!f1 && !f2 && !f3 && !f4) {
             return 'Nắm Tay (Fist)';
         }
 
-        // 2. PINCH / MOUSE CLICK (Thumb and Index tips very close)
-        const thumbIndexDist = getDistance(thumbTip, indexTip);
+        const thumbIndexDist = getDistance(landmarks[4], landmarks[8]);
+
+        // 2. OK SIGN (Thumb and Index tips close, and others extended)
+        if (thumbIndexDist < 0.045 && f2 && f3 && f4) {
+            return 'Cử Chỉ OK';
+        }
+
+        // 3. PINCH / MOUSE CLICK (Thumb and Index tips very close)
         if (thumbIndexDist < 0.045) {
             return 'Chụm Tay (Pinch)';
         }
 
-        // 3. OK SIGN (Thumb and Index tips close, and others extended)
-        if (thumbIndexDist < 0.05 && isMiddleExtended && isRingExtended && isPinkyExtended) {
-            return 'Cử Chỉ OK';
-        }
-
         // 4. POINTING (Index extended, others folded)
-        if (isIndexExtended && !isMiddleExtended && !isRingExtended && !isPinkyExtended) {
+        if (f1 && !f2 && !f3 && !f4) {
             return 'Chỉ Tay (Pointing)';
         }
 
         // 5. VICTORY / PEACE (Index & Middle extended, others folded)
-        if (isIndexExtended && isMiddleExtended && !isRingExtended && !isPinkyExtended) {
+        if (f1 && f2 && !f3 && !f4) {
             return 'Chiến Thắng (Victory)';
         }
 
         // 6. DEVIL HORNS / ROCK ON (Index & Pinky extended, middle & ring folded)
-        if (isIndexExtended && !isMiddleExtended && !isRingExtended && isPinkyExtended) {
+        if (f1 && !f2 && !f3 && f4) {
             return 'Mạnh Mẽ (Rock On)';
         }
 
-        // 7. THUMBS UP (Thumb extended up, others folded)
-        if (isThumbExtended && !isIndexExtended && !isMiddleExtended && !isRingExtended && !isPinkyExtended) {
-            if (thumbTip.y < thumbMcp.y) {
+        // 7. THUMBS UP / THUMBS DOWN (Thumb extended, others folded)
+        if (f0 && !f1 && !f2 && !f3 && !f4) {
+            if (landmarks[4].y < landmarks[2].y) {
                 return 'Thích (Thumbs Up)';
             } else {
                 return 'Không Thích (Thumbs Down)';
@@ -486,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 8. OPEN HAND / PAPER (All extended)
-        if (isIndexExtended && isMiddleExtended && isRingExtended && isPinkyExtended) {
+        if (f1 && f2 && f3 && f4) {
             return 'Bàn Tay Mở (Open Hand)';
         }
 

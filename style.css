@@ -513,7 +513,8 @@ body {
 }
 
 #output-canvas.mirrored {
-    transform: scaleX(-1);
+    /* Prevent double-mirroring. The video frame and landmarks are mirrored in JavaScript 2D context. */
+    transform: none;
 }
 
 /* HUD Overlay and Notifications */
